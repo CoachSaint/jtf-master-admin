@@ -242,3 +242,29 @@ export function formatMoney(amount) {
   const num = typeof amount === "number" ? amount : parseFloat(amount) || 0;
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(num);
 }
+
+export async function sendDirectEmail({ to, subject, text, html, operator, deal }) {
+  try {
+    const res = await fetch("/api/send-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to,
+        subject,
+        text,
+        html,
+        fromName: operator.name,
+        repEmail: operator.email,
+        dealId: deal?.id,
+      })
+    });
+    return await res.json();
+  } catch (e) {
+    return { ok: false, error: String(e.message || e) };
+  }
+}
+
+export function generateRemoteSignLink(deal) {
+  const origin = window.location.origin;
+  return `${origin}/?signDeal=${deal.id}`;
+}

@@ -8,6 +8,7 @@ import StepQuote from "./components/StepQuote";
 import StepSend from "./components/StepSend";
 import StepSign from "./components/StepSign";
 import DealsPipeline from "./components/DealsPipeline";
+import CustomerRemoteSignView from "./components/CustomerRemoteSignView";
 import { dealStorage } from "./lib/storage";
 import { authService, AUTHORIZED_OPERATORS } from "./lib/auth";
 
@@ -95,6 +96,13 @@ export default function App() {
         handleNewDeal();
       }
     }
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const signDealId = params.get("signDeal");
+
+  if (signDealId) {
+    return <CustomerRemoteSignView dealId={signDealId} />;
   }
 
   if (!authed) {
