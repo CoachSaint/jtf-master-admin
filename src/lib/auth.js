@@ -12,12 +12,12 @@ export const AUTHORIZED_OPERATORS = [
   },
   {
     id: "david",
-    name: "David",
-    email: "david@jtfhomegroup.com",
-    phone: "(404) 555-0188",
+    name: "David Skinner",
+    email: "david.skinner@jtfhomegroup.com",
+    phone: "804-584-7660",
     title: "Executive Partner",
     pin: "0424",
-    avatar: "D",
+    avatar: "DS",
   },
 ];
 

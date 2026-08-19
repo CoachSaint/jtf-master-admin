@@ -2,7 +2,7 @@
 
 export const OPERATORS = [
   { id: "michael", name: "Mike Saint", email: "michael.saint@jtfhomegroup.com", phone: "251-281-7512", title: "Managing Partner" },
-  { id: "david", name: "David", email: "david@jtfhomegroup.com", phone: "(404) 555-0188", title: "Executive Partner" },
+  { id: "david", name: "David Skinner", email: "david.skinner@jtfhomegroup.com", phone: "804-584-7660", title: "Executive Partner" },
 ];
 
 const DEALS_KEY = "jtf_master_deals_v1";
