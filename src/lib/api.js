@@ -5,19 +5,37 @@ const JTF_OS_API = "https://os.jtfhomegroup.com";
 const JTF_QUOTE_API = "https://quote.jtfhomegroup.com";
 
 export async function pullRoofTrueMeasurement(address) {
-  const res = await fetch(`${JTF_QUOTE_API}/api/quote`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ address }),
-  });
-  if (!res.ok) throw new Error(`Measurement pull failed (${res.status})`);
-  const data = await res.json();
+  let data = null;
+  try {
+    // 1. Same-origin Cloudflare Pages Function proxy (Zero CORS issues in browser)
+    const res = await fetch("/api/measure", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
+    if (res.ok) {
+      data = await res.json();
+    }
+  } catch (e) {
+    console.warn("Proxy attempt error:", e);
+  }
+
+  if (!data || !data.measurement && !data.estimate) {
+    // 2. Direct fallback
+    const directRes = await fetch(`${JTF_QUOTE_API}/api/quote`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ address }),
+    });
+    if (!directRes.ok) throw new Error(`Measurement pull failed (${directRes.status})`);
+    data = await directRes.json();
+  }
 
   const meas = data.measurement || data.estimate || {};
   const footprint = data.footprint || {};
   const geocode = data.geocode || {};
 
-  const squares = meas.billableSquares || meas.squares || 22.6;
+  const squares = meas.billableSquares || meas.squares || 28.5;
   const pitch = meas.pitch || 5;
   const facets = meas.facets || (footprint.flatAreaM2 ? Math.max(4, Math.round(footprint.flatAreaM2 / 22)) : 8);
 
