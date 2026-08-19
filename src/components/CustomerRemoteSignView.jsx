@@ -33,7 +33,7 @@ export default function CustomerRemoteSignView({ dealId }) {
 
   const dummyOperator = {
     name: deal.signatures?.operatorName || "Mike Saint",
-    email: deal.signatures?.operatorEmail || "realmichaelsaint872@gmail.com",
+    email: deal.signatures?.operatorEmail || "michael.saint@jtfhomegroup.com",
     title: "Managing Partner",
     phone: "251-281-7512",
   };

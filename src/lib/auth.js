@@ -4,7 +4,7 @@ export const AUTHORIZED_OPERATORS = [
   {
     id: "michael",
     name: "Mike Saint",
-    email: "realmichaelsaint872@gmail.com",
+    email: "michael.saint@jtfhomegroup.com",
     phone: "251-281-7512",
     title: "Managing Partner",
     pin: "0424",

@@ -1,7 +1,7 @@
 // Storage helper for Master Admin App
 
 export const OPERATORS = [
-  { id: "michael", name: "Mike Saint", email: "realmichaelsaint872@gmail.com", phone: "251-281-7512", title: "Managing Partner" },
+  { id: "michael", name: "Mike Saint", email: "michael.saint@jtfhomegroup.com", phone: "251-281-7512", title: "Managing Partner" },
   { id: "david", name: "David", email: "david@jtfhomegroup.com", phone: "(404) 555-0188", title: "Executive Partner" },
 ];
 
