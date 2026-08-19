@@ -1,104 +1,91 @@
-// Authorized JTF Legal Document Templates & Terms
+// Authorized JTF Retail Legal Document Templates & Google Drive Masters
+// Canonical Master: "02 - Roofing Contract.pdf" (Drive ID: 1vfPxsQ6PGZKEPjTANiDMO3wdKzX0BkJ-)
 
-export const JTF_LEGAL_TEMPLATES = {
-  contract: {
-    id: "jtf_master_contract_v1",
-    title: "JTF Master Roof Replacement Agreement",
-    docType: "contract",
-    counselApproved: true,
-    jurisdiction: "State of Georgia & Alabama",
-    clauses: [
-      {
-        title: "1. SCOPE OF WORK",
-        body: "JTF Home Group LLC ('Contractor') agrees to furnish all labor, materials, equipment, and supervision required to perform the roof installation/replacement and specified exterior improvements at the Owner's property address listed herein.",
-      },
-      {
-        title: "2. MATERIALS & STANDARDS",
-        body: "All roofing shingles, underlayments, ice & water shield, drip edge, starter course, ridge cap, and ventilation components will be installed in strict adherence to manufacturer specifications and applicable local building codes.",
-      },
-      {
-        title: "3. PAYMENT TERMS & SCHEDULE",
-        body: "Standard residential payment schedule: (a) 50% deposit upon agreement / material scheduling, (b) 50% final balance upon substantial completion and final quality walkthrough. For approved financing, lender terms apply.",
-      },
-      {
-        title: "4. LIMITED WORKMANSHIP WARRANTY",
-        body: "Contractor warrants all workmanship for a period of 5 years from completion date against defects in installation. Manufacturer shingle warranties are separate and provided directly by the manufacturer (TAMKO Building Products).",
-      },
-      {
-        title: "5. RIGHT OF RESCISSION (3-DAY RIGHT TO CANCEL)",
-        body: "Homeowner may cancel this transaction at any time prior to midnight of the third business day after the date of this transaction by providing written notice to Contractor.",
-      },
-    ]
-  },
-
-  contingency: {
-    id: "jtf_contingency_aic_v1",
-    title: "JTF Contingency Agreement & Work Authorization",
-    docType: "contingency",
-    counselApproved: true,
-    jurisdiction: "State of Georgia & Alabama",
-    clauses: [
-      {
-        title: "1. CONTINGENT UPON INSURANCE APPROVAL",
-        body: "This agreement is 100% contingent upon insurance carrier approval of full roof replacement/restoration at no out-of-pocket cost to the Homeowner other than the insurance deductible.",
-      },
-      {
-        title: "2. SCOPE & AUTHORIZATION",
-        body: "Homeowner authorizes JTF Home Group LLC to inspect storm damage, prepare detailed repair estimates, meet with the insurance adjuster, and perform all approved restoration work per insurance scope of loss.",
-      },
-      {
-        title: "3. NO FINANCIAL OBLIGATION IF DENIED",
-        body: "If the insurance company does not approve coverage for the repairs, this agreement becomes completely null and void with ZERO financial obligation to the Homeowner.",
-      },
-    ]
-  }
+export const JTF_RETAIL_CONTRACT = {
+  id: "jtf_roofing_contract_02",
+  driveId: "1vfPxsQ6PGZKEPjTANiDMO3wdKzX0BkJ-",
+  fileName: "02 - Roofing Contract.pdf",
+  title: "JTF Master Retail Roofing Agreement",
+  counselApproved: true,
+  cancellationNoticeId: "15gkQjJI4Gsr_eKK8Xc9sh5d9gzYq95hq",
+  cancellationFileName: "02A - Notice of Cancellation.pdf",
+  jurisdiction: "State of Georgia & Alabama",
+  clauses: [
+    {
+      title: "1. SCOPE OF WORK & SYSTEM SPECIFICATIONS",
+      body: "JTF Home Group LLC ('Contractor') agrees to furnish all labor, premium materials, equipment, site safety protection, and supervision required to perform a complete tear-off, roof deck inspection, and installation of the specified architectural roofing system and accessories at the Owner's property address.",
+    },
+    {
+      title: "2. ROOFING SYSTEM INCLUSIONS",
+      body: "Installation includes: (a) Synthetic high-performance underlayment, (b) Ice & Water leak barrier in all valleys and penetrations, (c) Pre-formed aluminum drip edge on eaves and rakes, (d) Starter shingle course along all perimeters, (e) High-definition ridge cap shingles, (f) Continuous ridge ventilation system, and (g) New rubber pipe boot flashings.",
+    },
+    {
+      title: "3. PAYMENT TERMS & RETAIL INVESTMENT SCHEDULE",
+      body: "Residential Payment Schedule: (a) 50% initial investment deposit upon agreement execution and material allocation, (b) 50% final balance upon substantial completion and final customer quality walkthrough inspection. For approved third-party retail financing (HFS / Acorn), lender release protocol governs.",
+    },
+    {
+      title: "4. DUAL WARRANTY COVERAGE",
+      body: "Owner receives: (a) JTF 5-Year Workmanship Warranty Certificate protecting against any installation defects, and (b) TAMKO Building Products Manufacturer Limited Warranty covering shingle material integrity, wind protection (up to 160 MPH on Titan XT), and algae resistance.",
+    },
+    {
+      title: "5. STATUTORY 3-DAY RIGHT OF RESCISSION (NOTICE OF CANCELLATION)",
+      body: "You, the Homeowner, may cancel this transaction without penalty or obligation at any time prior to midnight of the third business day after the date of this transaction by submitting written notice of cancellation to JTF Home Group LLC.",
+    },
+    {
+      title: "6. PROPERTY PROTECTION & CLEAN-UP GUARANTEE",
+      body: "Contractor guarantees thorough property protection during construction, including tarps, magnetic nail sweep of the entire yard, driveway, and landscaping, and removal/haul-away of all job-related debris.",
+    },
+  ]
 };
 
-export function generateLegalDocumentText({ deal, operator, docType = "contract" }) {
-  const tpl = JTF_LEGAL_TEMPLATES[docType] || JTF_LEGAL_TEMPLATES.contract;
-  const isRetail = deal.dealType === "retail";
+export function generateRetailContractText({ deal, operator }) {
   const dateStr = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+  const squares = deal.measurements?.squares || "28.5";
+  const pitch = deal.measurements?.pitch || 6;
 
   let text = `========================================================================\n`;
-  text += `                     JTF HOME GROUP LLC\n`;
-  text += `                ${tpl.title.toUpperCase()}\n`;
+  text += `                         JTF HOME GROUP LLC\n`;
+  text += `                  MASTER RETAIL ROOFING AGREEMENT\n`;
+  text += `          Authorized Legal Master (Drive ID: 1vfPxsQ6PGZKEPjTANiDMO3wdKzX0BkJ-)\n`;
   text += `========================================================================\n\n`;
-  text += `DATE: ${dateStr}\n`;
-  text += `DOCUMENT ID: JTF-DOC-${Date.now().toString(36).toUpperCase()}\n`;
-  text += `EXECUTIVE REPRESENTATIVE: ${operator.name} (${operator.title})\n`;
-  text += `REPRESENTATIVE EMAIL: ${operator.email}\n\n`;
+  text += `AGREEMENT DATE: ${dateStr}\n`;
+  text += `CONTRACT ID:    JTF-RTL-${Date.now().toString(36).toUpperCase()}\n`;
+  text += `EXECUTIVE:      ${operator.name} (${operator.title})\n`;
+  text += `OFFICE EMAIL:   ${operator.email} | (404) 555-0199\n\n`;
 
-  text += `CUSTOMER / PROPERTY OWNER:\n`;
-  text += `  Name:    ${deal.customerName || "Homeowner"}\n`;
-  text += `  Address: ${deal.address}\n`;
-  text += `  Phone:   ${deal.customerPhone || "On File"}\n`;
-  text += `  Email:   ${deal.customerEmail || "On File"}\n\n`;
+  text += `PROPERTY OWNER / CUSTOMER:\n`;
+  text += `  Customer Name:   ${deal.customerName || "Homeowner"}\n`;
+  text += `  Project Address: ${deal.address}\n`;
+  text += `  Phone:           ${deal.customerPhone || "On File"}\n`;
+  text += `  Email:           ${deal.customerEmail || "On File"}\n\n`;
 
-  text += `PROJECT SPECIFICATIONS & SCOPE:\n`;
-  text += `  Package / Scope: ${deal.selectedPackage?.name || "Roof Replacement"}\n`;
-  text += `  Measured Area:   ${deal.measurements?.squares || "28.5"} Squares (${deal.measurements?.pitch || 6}/12 Pitch)\n`;
-  text += `  Classification:  ${isRetail ? "Retail Installation" : "Insurance Restoration"}\n`;
+  text += `RETAIL ROOF SPECIFICATIONS:\n`;
+  text += `  Roof System Package: ${deal.selectedPackage?.name || "TAMKO Titan XT Architectural System"}\n`;
+  text += `  Measured Area:       ${squares} Installed Squares (${pitch}/12 Pitch Midpoint)\n`;
+  text += `  Project Type:        Retail Direct Homeowner Replacement\n`;
 
   if (deal.lineItems && deal.lineItems.length > 0) {
-    text += `\nINCLUDED ADD-ONS & TRADE ITEMS:\n`;
+    text += `\nINCLUDED SCOPE ADD-ONS & TRADE ITEMS:\n`;
     deal.lineItems.forEach((it) => {
       text += `  • ${it.label}: $${it.amount.toLocaleString()}\n`;
     });
   }
 
-  text += `\nFINANCIAL SUMMARY:\n`;
-  text += `  Base Scope Amount:     $${(deal.baseTotal || 0).toLocaleString()}\n`;
+  text += `\nRETAIL FINANCIAL SUMMARY:\n`;
+  text += `  Base System Investment:  $${(deal.baseTotal || 0).toLocaleString()}\n`;
   if (deal.addOnsTotal > 0) {
-    text += `  Add-ons & Upgrades:    +$${deal.addOnsTotal.toLocaleString()}\n`;
+    text += `  Add-ons & Trade Scope:  +$${deal.addOnsTotal.toLocaleString()}\n`;
   }
   if (deal.discountAmount > 0) {
-    text += `  In-Home Discount:      -$${deal.discountAmount.toLocaleString()} (${deal.discountPct}%)\n`;
+    text += `  In-Home Discount:       -$${deal.discountAmount.toLocaleString()} (${deal.discountPct}% In-Home Promotion)\n`;
   }
   text += `  --------------------------------------------------------\n`;
-  text += `  TOTAL CONTRACT VALUE:  $${(deal.grandTotal || 0).toLocaleString()} USD\n\n`;
+  text += `  TOTAL AGREED INVESTMENT: $${(deal.grandTotal || 0).toLocaleString()} USD\n`;
+  text += `  Deposit Required (50%):  $${Math.round((deal.grandTotal || 0) * 0.5).toLocaleString()} USD\n`;
+  text += `  Final Balance (50%):     $${Math.round((deal.grandTotal || 0) * 0.5).toLocaleString()} USD (Due Upon Completion)\n\n`;
 
-  text += `TERMS & LEGAL CONDITIONS:\n`;
-  tpl.clauses.forEach((c) => {
+  text += `AUTHORIZED TERMS & LEGAL COVENANTS:\n`;
+  JTF_RETAIL_CONTRACT.clauses.forEach((c) => {
     text += `\n${c.title}\n${c.body}\n`;
   });
 

@@ -1,12 +1,11 @@
 import { useState } from "react";
-import { User, Phone, Mail, MapPin, ArrowRight, ShieldCheck, DollarSign } from "lucide-react";
+import { User, Phone, Mail, MapPin, ArrowRight, Home, Sparkles } from "lucide-react";
 
 export default function StepLead({ deal, onUpdateDeal, onNext }) {
   const [name, setName] = useState(deal.customerName || "");
   const [phone, setPhone] = useState(deal.customerPhone || "");
   const [email, setEmail] = useState(deal.customerEmail || "");
   const [address, setAddress] = useState(deal.address || "");
-  const [dealType, setDealType] = useState(deal.dealType || "retail");
 
   function handleContinue(e) {
     e.preventDefault();
@@ -19,7 +18,7 @@ export default function StepLead({ deal, onUpdateDeal, onNext }) {
       customerPhone: phone,
       customerEmail: email,
       address: address.trim(),
-      dealType,
+      dealType: "retail",
     });
     onNext();
   }
@@ -28,34 +27,30 @@ export default function StepLead({ deal, onUpdateDeal, onNext }) {
     <div className="admin-card">
       <div className="card-title">
         <MapPin size={22} color="var(--red)" />
-        1. Customer &amp; Property Details
+        1. Retail Customer &amp; Property Info
       </div>
       <div className="card-subtitle">
-        Enter the property address and customer contact info to begin.
+        Enter the property address and homeowner contact info.
       </div>
 
       <form onSubmit={handleContinue}>
-        {/* Deal Type Switcher */}
-        <div className="form-group">
-          <label className="form-label">Deal Category</label>
-          <div className="grid-2">
-            <button
-              type="button"
-              className={`btn-secondary ${dealType === "retail" ? "active" : ""}`}
-              onClick={() => setDealType("retail")}
-            >
-              <DollarSign size={16} />
-              Retail Cash / Finance
-            </button>
-            <button
-              type="button"
-              className={`btn-secondary ${dealType === "insurance" ? "active" : ""}`}
-              onClick={() => setDealType("insurance")}
-            >
-              <ShieldCheck size={16} />
-              Insurance Claim / Scope
-            </button>
-          </div>
+        {/* Retail Header Badge */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            background: "var(--navy-light, #1e293b)",
+            color: "#fff",
+            padding: "10px 14px",
+            borderRadius: "12px",
+            marginBottom: "16px",
+            fontSize: "13px",
+            fontWeight: 700,
+          }}
+        >
+          <Home size={16} color="var(--gold)" />
+          <span>JTF Direct Retail Replacement &amp; Exterior Installation</span>
         </div>
 
         {/* Address */}
@@ -74,7 +69,7 @@ export default function StepLead({ deal, onUpdateDeal, onNext }) {
 
         {/* Customer Name */}
         <div className="form-group">
-          <label className="form-label">Customer Name</label>
+          <label className="form-label">Homeowner / Customer Name</label>
           <input
             type="text"
             className="input-field"
