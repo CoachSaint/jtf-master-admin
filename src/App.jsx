@@ -48,6 +48,7 @@ export default function App() {
       grandTotal: 0,
       proposal: null,
       signatures: null,
+      syncedToOS: false,
     };
   }
 
@@ -109,14 +110,17 @@ export default function App() {
         currentTab={tab}
         onTabChange={setTab}
         activeDeal={activeDeal}
+        onUpdateDeal={handleUpdateDeal}
       />
 
       {tab === "deals" ? (
         <DealsPipeline
           deals={deals}
+          operator={operator}
           onSelectDeal={handleSelectDeal}
           onNewDeal={handleNewDeal}
           onDeleteDeal={handleDeleteDeal}
+          onUpdateDeal={handleUpdateDeal}
         />
       ) : (
         <>

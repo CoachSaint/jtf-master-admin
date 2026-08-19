@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { PenTool, CheckCircle, ShieldCheck, ArrowLeft, Download, RefreshCw, Mail, FileText, Award } from "lucide-react";
+import { PenTool, CheckCircle, ShieldCheck, ArrowLeft, Download, RefreshCw, Mail, FileText, Award, CloudUpload } from "lucide-react";
 import confetti from "canvas-confetti";
 import SignaturePad from "./SignaturePad";
 import LegalContractPreview from "./LegalContractPreview";
-import { formatMoney } from "../lib/api";
+import { formatMoney, pushDealToOS } from "../lib/api";
 import { JTF_LEGAL_TEMPLATES } from "../lib/legalDocs";
 
 export default function StepSign({ deal, operator, onUpdateDeal, onBack, onComplete }) {
@@ -13,8 +13,10 @@ export default function StepSign({ deal, operator, onUpdateDeal, onBack, onCompl
   const [reviewed, setReviewed] = useState(false);
   const [agreed, setAgreed] = useState(deal.status === "signed");
   const [busy, setBusy] = useState(false);
+  const [osSyncing, setOsSyncing] = useState(false);
+  const [osDone, setOsDone] = useState(deal.syncedToOS || false);
 
-  function handleFinalize() {
+  async function handleFinalize() {
     if (!custSig) {
       alert("Please capture the homeowner's signature.");
       return;
@@ -40,12 +42,41 @@ export default function StepSign({ deal, operator, onUpdateDeal, onBack, onCompl
       docTitle: JTF_LEGAL_TEMPLATES[docType]?.title || "Roofing Agreement",
     };
 
+    const updatedDeal = {
+      ...deal,
+      signatures,
+      status: "signed",
+    };
+
     onUpdateDeal({
       signatures,
       status: "signed",
     });
+
+    // Automatically push the signed deal to JTF OS CRM
+    try {
+      const res = await pushDealToOS({ deal: updatedDeal, operator });
+      setOsDone(true);
+      onUpdateDeal({ syncedToOS: true, osSyncedAt: res.syncedAt, osLeadId: res.leadId });
+    } catch (e) {
+      console.warn("Auto-push to OS non-fatal:", e);
+    }
+
     setAgreed(true);
     setBusy(false);
+  }
+
+  async function handleManualPush() {
+    setOsSyncing(true);
+    try {
+      const res = await pushDealToOS({ deal, operator });
+      setOsDone(true);
+      onUpdateDeal({ syncedToOS: true, osSyncedAt: res.syncedAt, osLeadId: res.leadId });
+    } catch (e) {
+      alert("Sync failed: " + String(e.message || e));
+    } finally {
+      setOsSyncing(false);
+    }
   }
 
   return (
@@ -82,18 +113,22 @@ export default function StepSign({ deal, operator, onUpdateDeal, onBack, onCompl
               <span style={{ fontSize: 14, fontWeight: 700 }}>{operator.name} ({operator.title})</span>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between" }}>
-              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>Audit Timestamp:</span>
-              <span style={{ fontSize: 12, fontFamily: "monospace", color: "var(--navy)" }}>{new Date().toLocaleString()}</span>
+              <span style={{ fontSize: 13, color: "var(--text-muted)" }}>CRM Sync Status:</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: "var(--green)" }}>
+                {osDone ? "🟢 Saved & Synced to JTF OS" : "🟡 Local Copy Ready"}
+              </span>
             </div>
           </div>
 
-          <div className="grid-2">
+          <div className="grid-2" style={{ marginBottom: 10 }}>
             <button
               type="button"
-              className="btn-primary"
-              onClick={onComplete}
+              className="btn-secondary"
+              disabled={osSyncing}
+              onClick={handleManualPush}
             >
-              Start Next Deal
+              <CloudUpload size={16} />
+              {osSyncing ? "Pushing…" : osDone ? "Re-sync to JTF OS ✓" : "🚀 Push to OS"}
             </button>
             <a
               className="btn-secondary"
@@ -104,6 +139,14 @@ export default function StepSign({ deal, operator, onUpdateDeal, onBack, onCompl
               Email Receipt to Customer
             </a>
           </div>
+
+          <button
+            type="button"
+            className="btn-primary"
+            onClick={onComplete}
+          >
+            Start Next Deal Flow
+          </button>
         </div>
       ) : (
         <div>
@@ -183,7 +226,7 @@ export default function StepSign({ deal, operator, onUpdateDeal, onBack, onCompl
               disabled={!custSig || !reviewed || busy}
               onClick={handleFinalize}
             >
-              {busy ? "Executing…" : "✍️ Execute Legal Agreement"}
+              {busy ? "Executing & Pushing to OS…" : "✍️ Execute Legal Agreement"}
             </button>
           </div>
         </div>

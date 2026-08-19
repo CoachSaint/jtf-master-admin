@@ -1,8 +1,25 @@
 import { useState } from "react";
-import { FolderCheck, Plus, CheckCircle, Clock, Trash2, ExternalLink } from "lucide-react";
-import { formatMoney } from "../lib/api";
+import { FolderCheck, Plus, CheckCircle, Clock, Trash2, ExternalLink, CloudUpload, CheckCircle2 } from "lucide-react";
+import { formatMoney, pushDealToOS } from "../lib/api";
 
-export default function DealsPipeline({ deals, onSelectDeal, onNewDeal, onDeleteDeal }) {
+export default function DealsPipeline({ deals, operator, onSelectDeal, onNewDeal, onDeleteDeal, onUpdateDeal }) {
+  const [syncingId, setSyncingId] = useState(null);
+
+  async function handleQuickPush(e, deal) {
+    e.stopPropagation();
+    setSyncingId(deal.id);
+    try {
+      const res = await pushDealToOS({ deal, operator });
+      if (onUpdateDeal) {
+        onUpdateDeal({ ...deal, syncedToOS: true, osSyncedAt: res.syncedAt, osLeadId: res.leadId });
+      }
+    } catch (e) {
+      alert("Push error: " + String(e.message || e));
+    } finally {
+      setSyncingId(null);
+    }
+  }
+
   return (
     <div className="admin-card">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
@@ -35,17 +52,18 @@ export default function DealsPipeline({ deals, onSelectDeal, onNewDeal, onDelete
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {deals.map((deal) => {
             const isSigned = deal.status === "signed";
+            const isSyncing = syncingId === deal.id;
             return (
               <div
                 key={deal.id}
                 style={{
-                  border: "1.5px solid var(--line)",
+                  border: "1.5px solid " + (deal.syncedToOS ? "#86efac" : "var(--line)"),
                   borderRadius: "14px",
                   padding: "14px 16px",
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  background: "#fff",
+                  background: deal.syncedToOS ? "#f0fdf4" : "#fff",
                   cursor: "pointer",
                   transition: "all 0.15s ease",
                 }}
@@ -63,6 +81,11 @@ export default function DealsPipeline({ deals, onSelectDeal, onNewDeal, onDelete
                     ) : (
                       <span className="badge badge-blue">Draft</span>
                     )}
+                    {deal.syncedToOS && (
+                      <span style={{ fontSize: 11, color: "var(--green)", fontWeight: 700, display: "flex", alignItems: "center", gap: 2 }}>
+                        <CheckCircle2 size={12} /> In OS CRM
+                      </span>
+                    )}
                   </div>
                   <div style={{ fontSize: 13, color: "var(--text-muted)" }}>{deal.address}</div>
                   <div style={{ fontSize: 12, color: "var(--navy)", fontWeight: 600, marginTop: 4 }}>
@@ -70,7 +93,7 @@ export default function DealsPipeline({ deals, onSelectDeal, onNewDeal, onDelete
                   </div>
                 </div>
 
-                <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ textAlign: "right", display: "flex", alignItems: "center", gap: 10 }}>
                   <div>
                     <div style={{ fontSize: 18, fontWeight: 900, color: "var(--navy)" }}>
                       {deal.grandTotal ? formatMoney(deal.grandTotal) : "—"}
@@ -79,6 +102,19 @@ export default function DealsPipeline({ deals, onSelectDeal, onNewDeal, onDelete
                       {new Date(deal.updatedAt || deal.createdAt).toLocaleDateString()}
                     </div>
                   </div>
+
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    style={{ width: "auto", padding: "6px 10px", minHeight: 28, fontSize: 11, fontWeight: 700 }}
+                    disabled={isSyncing}
+                    title="Push data to JTF OS CRM"
+                    onClick={(e) => handleQuickPush(e, deal)}
+                  >
+                    <CloudUpload size={13} />
+                    {isSyncing ? "…" : deal.syncedToOS ? "Re-sync" : "Push OS"}
+                  </button>
+
                   <button
                     type="button"
                     className="btn-secondary"

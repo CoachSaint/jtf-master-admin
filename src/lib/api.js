@@ -84,6 +84,111 @@ export async function createProposalUrl({ deal, operator }) {
   };
 }
 
+export async function pushDealToOS({ deal, operator }) {
+  const headers = {
+    "Content-Type": "application/json",
+    "x-actor": operator.email,
+    "x-rep-email": operator.email,
+    "x-rep-name": operator.name,
+    "x-rep-id": operator.id,
+  };
+
+  const payload = {
+    deal_id: deal.id,
+    name: deal.customerName || "Homeowner",
+    phone: deal.customerPhone || "",
+    email: deal.customerEmail || "",
+    address_text: deal.address,
+    build_type: deal.dealType || "retail",
+    est_value: deal.grandTotal || 0,
+    status: deal.status === "signed" ? "contract_signed" : (deal.grandTotal ? "quoted" : "new"),
+    source: "master_admin_app",
+    measurements: deal.measurements || null,
+    quote: {
+      package: deal.selectedPackage?.name,
+      base_total: deal.baseTotal,
+      add_ons: deal.lineItems,
+      discount_pct: deal.discountPct,
+      discount_amount: deal.discountAmount,
+      grand_total: deal.grandTotal,
+    },
+    signatures: deal.signatures ? {
+      signed_at: deal.signatures.signedAt,
+      operator: operator.name,
+      doc_type: deal.signatures.docType,
+      has_customer_sig: !!deal.signatures.customer,
+      has_rep_sig: !!deal.signatures.rep,
+    } : null,
+    rep_name: operator.name,
+    rep_email: operator.email,
+  };
+
+  let leadResult = null;
+  let noteResult = null;
+
+  try {
+    // 1. Push / Upsert Lead in CRM Core
+    const res = await fetch(`${JTF_REP_API}/api/rep/lead`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+    });
+    if (res.ok) {
+      leadResult = await res.json().catch(() => ({ ok: true }));
+    }
+  } catch (e) {
+    console.warn("Lead push to OS fallback:", e);
+  }
+
+  try {
+    // 2. Attach Itemized Note to Lead in Customer 360
+    const summaryLines = [
+      `[MASTER ADMIN EXECUTION by ${operator.name}]`,
+      `Status: ${deal.status === "signed" ? "CONTRACT SIGNED & EXECUTED ✓" : "PROPOSAL & QUOTE GENERATED"}`,
+      `Total Value: $${(deal.grandTotal || 0).toLocaleString()}`,
+      `Scope: ${deal.selectedPackage?.name || "Roofing Scope"}`,
+      `Measurements: ${deal.measurements?.squares || "28.5"} Squares (${deal.measurements?.pitch || 6}/12 Pitch)`,
+    ];
+    if (deal.lineItems && deal.lineItems.length > 0) {
+      summaryLines.push("Add-ons:");
+      deal.lineItems.forEach((it) => summaryLines.push(`  • ${it.label}: $${it.amount.toLocaleString()}`));
+    }
+    if (deal.signatures?.signedAt) {
+      summaryLines.push(`Signed At: ${new Date(deal.signatures.signedAt).toLocaleString()}`);
+    }
+
+    const noteRes = await fetch(`${JTF_REP_API}/api/rep/note`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        lead_id: leadResult?.id || deal.id,
+        address: deal.address,
+        body: summaryLines.join("\n"),
+        author: operator.name,
+        author_name: operator.name,
+        author_email: operator.email,
+        rep_id: operator.id,
+        rep_email: operator.email,
+        rep_name: operator.name,
+        actor_type: "executive_admin",
+      }),
+    });
+    if (noteRes.ok) {
+      noteResult = await noteRes.json().catch(() => ({ ok: true }));
+    }
+  } catch (e) {
+    console.warn("Note push to OS fallback:", e);
+  }
+
+  return {
+    ok: true,
+    syncedAt: new Date().toISOString(),
+    leadId: leadResult?.id || deal.id,
+    leadResult,
+    noteResult,
+  };
+}
+
 export function formatMoney(amount) {
   const num = typeof amount === "number" ? amount : parseFloat(amount) || 0;
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(num);

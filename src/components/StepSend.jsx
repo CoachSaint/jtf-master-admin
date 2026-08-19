@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
-import { Send, Mail, MessageSquare, Share2, FileText, ArrowRight, ArrowLeft, CheckCircle2, ExternalLink } from "lucide-react";
-import { createProposalUrl, formatMoney } from "../lib/api";
+import { Send, Mail, MessageSquare, Share2, FileText, ArrowRight, ArrowLeft, CheckCircle2, ExternalLink, CloudUpload } from "lucide-react";
+import { createProposalUrl, pushDealToOS, formatMoney } from "../lib/api";
 
 export default function StepSend({ deal, operator, onUpdateDeal, onNext, onBack }) {
   const [proposal, setProposal] = useState(deal.proposal || null);
   const [busy, setBusy] = useState(!deal.proposal);
   const [copied, setCopied] = useState(false);
+  const [osSyncing, setOsSyncing] = useState(false);
+  const [osDone, setOsDone] = useState(deal.syncedToOS || false);
 
   useEffect(() => {
     if (!proposal) {
@@ -23,6 +25,19 @@ export default function StepSend({ deal, operator, onUpdateDeal, onNext, onBack 
       console.error(e);
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function handlePushToOS() {
+    setOsSyncing(true);
+    try {
+      const res = await pushDealToOS({ deal, operator });
+      setOsDone(true);
+      onUpdateDeal({ syncedToOS: true, osSyncedAt: res.syncedAt, osLeadId: res.leadId });
+    } catch (e) {
+      alert("Push to OS failed: " + String(e.message || e));
+    } finally {
+      setOsSyncing(false);
     }
   }
 
@@ -87,12 +102,32 @@ export default function StepSend({ deal, operator, onUpdateDeal, onNext, onBack 
 
       {/* Proposal Status Banner */}
       <div style={{ background: "#f0fdf4", border: "1.5px solid #86efac", borderRadius: "14px", padding: "16px", marginBottom: "18px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <CheckCircle2 size={24} color="var(--green)" />
-          <div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Proposal Built &amp; Live</div>
-            <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Ready for instant delivery or immediate on-glass signing.</div>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <CheckCircle2 size={24} color="var(--green)" />
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 800, color: "var(--navy)" }}>Proposal Built &amp; Ready</div>
+              <div style={{ fontSize: 13, color: "var(--text-muted)" }}>Ready for instant delivery or CRM storage.</div>
+            </div>
           </div>
+
+          <button
+            type="button"
+            className="btn-secondary"
+            disabled={osSyncing}
+            onClick={handlePushToOS}
+            style={{
+              width: "auto",
+              padding: "6px 14px",
+              fontSize: "12px",
+              background: osDone ? "#dcfce7" : "#fff",
+              color: osDone ? "#166534" : "var(--navy)",
+              borderColor: osDone ? "#86efac" : "var(--line)",
+            }}
+          >
+            <CloudUpload size={14} />
+            {osSyncing ? "Pushing…" : osDone ? "In CRM OS ✓" : "Push to OS"}
+          </button>
         </div>
       </div>
 
