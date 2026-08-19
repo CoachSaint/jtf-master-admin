@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Ruler, Zap, CheckCircle2, ArrowRight, ArrowLeft, RefreshCw, Layers, ShieldCheck, Clock, FileDown, ExternalLink } from "lucide-react";
+import { Ruler, Zap, CheckCircle2, ArrowRight, ArrowLeft, RefreshCw, Layers, AlertTriangle, ShieldCheck, Clock, FileDown, ExternalLink } from "lucide-react";
 import { pullRoofTrueMeasurement, orderEagleViewReport, checkEagleViewStatus, EAGLEVIEW_PRODUCTS } from "../lib/api";
 
 export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBack }) {
@@ -7,7 +7,8 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
   const [squares, setSquares] = useState(deal.measurements?.squares || 28.5);
   const [pitch, setPitch] = useState(deal.measurements?.pitch || 6);
   const [facets, setFacets] = useState(deal.measurements?.facets || 8);
-  const [source, setSource] = useState(deal.measurements?.source || "RoofTrue (Free Live Pull)");
+  const [source, setSource] = useState(deal.measurements?.source || "RoofTrue (Calculated Estimate)");
+  const [isFallback, setIsFallback] = useState(true);
   const [msg, setMsg] = useState("");
 
   // EagleView Live Order State
@@ -33,6 +34,7 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
       setPitch(res.pitch);
       setFacets(res.facets);
       setSource(res.source);
+      setIsFallback(!!res.fallback);
       onUpdateDeal({
         measurements: {
           squares: res.squares,
@@ -42,6 +44,7 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
         }
       });
     } catch (e) {
+      setIsFallback(true);
       setMsg("Using calibrated roof model estimate.");
     } finally {
       setBusy(false);
@@ -97,6 +100,7 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
         if (status.pitch) setPitch(status.pitch);
         if (status.facets) setFacets(status.facets);
         setSource(`EagleView (Report #${evOrder.reportId})`);
+        setIsFallback(false);
         updated.delivered = true;
       }
 
@@ -110,6 +114,14 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
     } finally {
       setEvPolling(false);
     }
+  }
+
+  function adjustSquares(delta) {
+    const next = Math.max(1, (parseFloat(squares) || 0) + delta);
+    const rounded = parseFloat(next.toFixed(1));
+    setSquares(rounded);
+    setSource("Manual / Verified Keypad");
+    setIsFallback(false);
   }
 
   function handleContinue() {
@@ -129,10 +141,10 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
     <div className="admin-card">
       <div className="card-title">
         <Ruler size={22} color="var(--red)" />
-        2. Rooftop Measurement
+        2. Rooftop Measurement &amp; Squares
       </div>
       <div className="card-subtitle">
-        Verified geometric measurements for <b>{deal.address}</b>
+        Geometric specifications for <b>{deal.address}</b>
       </div>
 
       {/* Measurement Box */}
@@ -168,37 +180,52 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
         </div>
       </div>
 
-      {msg && (
-        <div style={{ background: "#fef9c3", border: "1px solid #fef08a", color: "#854d0e", padding: "10px 14px", borderRadius: "10px", fontSize: "13px", margin: "12px 0", fontWeight: 600 }}>
-          {msg}
+      {/* Accuracy Disclosure & Transparency Notice */}
+      <div style={{ background: "#fffbeb", border: "1.5px solid #fde68a", borderRadius: "12px", padding: "12px 14px", marginBottom: "16px" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
+          <AlertTriangle size={18} color="#b45309" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div style={{ fontSize: "12.5px", color: "#78350f", lineHeight: 1.4 }}>
+            <b>Measurement Policy:</b> Instant automated pulls are calibrated estimates for field quoting. For final material orders and contract accuracy, adjust below with your tape measurements or order an <b>EagleView Premium Report</b>.
+          </div>
         </div>
-      )}
+      </div>
 
-      {/* Manual Keypad / Adjust */}
-      <div className="form-group" style={{ marginTop: 16 }}>
-        <label className="form-label">Adjust Measured Squares (If you have a verified report)</label>
-        <div style={{ display: "flex", gap: 8 }}>
+      {/* Easy Manual Adjust Buttons for David */}
+      <div style={{ background: "#f8fafc", padding: "14px 16px", borderRadius: "14px", border: "1.5px solid var(--line)", marginBottom: "16px" }}>
+        <label className="form-label">Quick Adjust Measured Squares</label>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
           <input
             type="number"
             step="0.1"
             min="1"
             className="input-field"
+            style={{ fontSize: "18px", fontWeight: "900", textAlign: "center" }}
             value={squares}
-            onChange={(e) => setSquares(e.target.value)}
+            onChange={(e) => {
+              setSquares(e.target.value);
+              setSource("Manual Entry");
+              setIsFallback(false);
+            }}
           />
-          <button
-            type="button"
-            className="btn-secondary"
-            style={{ width: "auto", padding: "0 16px" }}
-            onClick={() => setSquares((prev) => (parseFloat(prev) + 1).toFixed(1))}
-          >
-            +1 sq
-          </button>
+          <div style={{ display: "flex", gap: 4 }}>
+            <button type="button" className="btn-secondary" style={{ width: "auto", padding: "8px 12px", minHeight: 38 }} onClick={() => adjustSquares(-5)}>
+              −5
+            </button>
+            <button type="button" className="btn-secondary" style={{ width: "auto", padding: "8px 12px", minHeight: 38 }} onClick={() => adjustSquares(-1)}>
+              −1
+            </button>
+            <button type="button" className="btn-secondary" style={{ width: "auto", padding: "8px 12px", minHeight: 38 }} onClick={() => adjustSquares(+1)}>
+              +1
+            </button>
+            <button type="button" className="btn-secondary" style={{ width: "auto", padding: "8px 12px", minHeight: 38 }} onClick={() => adjustSquares(+5)}>
+              +5
+            </button>
+          </div>
         </div>
       </div>
 
       {/* ── LIVE EAGLEVIEW ORDER SUITE ────────────────────────────────────────── */}
-      <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "14px", border: "1.5px solid var(--line)", margin: "18px 0" }}>
+      <div style={{ background: "#f8fafc", padding: "16px", borderRadius: "14px", border: "1.5px solid var(--line)", margin: "16px 0" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <Layers size={18} color="var(--blue)" />
