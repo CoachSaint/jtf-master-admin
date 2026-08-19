@@ -13,12 +13,14 @@ export default function StepLead({ deal, onUpdateDeal, onNext }) {
       alert("Please enter the property address.");
       return;
     }
+    const isNewAddress = deal.address !== address.trim();
     onUpdateDeal({
       customerName: name || "Homeowner",
       customerPhone: phone,
       customerEmail: email,
       address: address.trim(),
       dealType: "retail",
+      measurements: isNewAddress ? null : deal.measurements,
     });
     onNext();
   }

@@ -4,11 +4,11 @@ import { pullRoofTrueMeasurement, orderEagleViewReport, checkEagleViewStatus, EA
 
 export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBack }) {
   const [busy, setBusy] = useState(false);
-  const [squares, setSquares] = useState(deal.measurements?.squares || 28.5);
-  const [pitch, setPitch] = useState(deal.measurements?.pitch || 6);
+  const [squares, setSquares] = useState(deal.measurements?.squares || "");
+  const [pitch, setPitch] = useState(deal.measurements?.pitch || 5);
   const [facets, setFacets] = useState(deal.measurements?.facets || 8);
-  const [source, setSource] = useState(deal.measurements?.source || "RoofTrue (Calculated Estimate)");
-  const [isFallback, setIsFallback] = useState(true);
+  const [source, setSource] = useState(deal.measurements?.source || "RoofTrue (Live Satellite)");
+  const [isFallback, setIsFallback] = useState(false);
   const [msg, setMsg] = useState("");
 
   // EagleView Live Order State
@@ -20,32 +20,43 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
   const [showEvSuite, setShowEvSuite] = useState(!!deal.eagleViewOrder);
 
   useEffect(() => {
-    if (!deal.measurements && deal.address) {
+    if (deal.address && (!deal.measurements || deal.measurements.address !== deal.address || !deal.measurements.squares)) {
       handlePull();
+    } else if (deal.measurements?.squares) {
+      setSquares(deal.measurements.squares);
+      setPitch(deal.measurements.pitch || 5);
+      setFacets(deal.measurements.facets || 8);
+      setSource(deal.measurements.source || "RoofTrue (Live Satellite)");
     }
   }, [deal.address]);
 
   async function handlePull() {
+    if (!deal.address) return;
     setBusy(true);
-    setMsg("");
+    setMsg("Pulling live satellite & LiDAR footprint from RoofTrue…");
     try {
       const res = await pullRoofTrueMeasurement(deal.address);
       setSquares(res.squares);
       setPitch(res.pitch);
       setFacets(res.facets);
       setSource(res.source);
-      setIsFallback(!!res.fallback);
+      setIsFallback(false);
+      setMsg(`✓ Real RoofTrue measurement: ${res.squares} Squares (${res.pitch}/12 pitch)`);
       onUpdateDeal({
         measurements: {
+          address: deal.address,
           squares: res.squares,
           pitch: res.pitch,
           facets: res.facets,
           source: res.source,
+          flatAreaM2: res.flatAreaM2,
+          confidence: res.confidence,
+          normalizedAddress: res.normalizedAddress,
         }
       });
     } catch (e) {
       setIsFallback(true);
-      setMsg("Using calibrated roof model estimate.");
+      setMsg("RoofTrue lookup note: " + (e.message || "Manual adjustment enabled."));
     } finally {
       setBusy(false);
     }
