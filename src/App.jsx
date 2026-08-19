@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import "./styles.css";
 import Header from "./components/Header";
+import LockScreen from "./components/LockScreen";
 import StepLead from "./components/StepLead";
 import StepMeasure from "./components/StepMeasure";
 import StepQuote from "./components/StepQuote";
 import StepSend from "./components/StepSend";
 import StepSign from "./components/StepSign";
 import DealsPipeline from "./components/DealsPipeline";
-import { dealStorage, OPERATORS } from "./lib/storage";
+import { dealStorage } from "./lib/storage";
+import { authService, AUTHORIZED_OPERATORS } from "./lib/auth";
 
 const STEPS = [
   { id: 1, label: "Lead", sub: "Step 1" },
@@ -18,7 +20,8 @@ const STEPS = [
 ];
 
 export default function App() {
-  const [operator, setOperator] = useState(dealStorage.getActiveOperator());
+  const [authed, setAuthed] = useState(() => authService.isAuthenticated());
+  const [operator, setOperator] = useState(() => authService.getCurrentUser());
   const [tab, setTab] = useState("flow"); // "flow" | "deals"
   const [currentStep, setCurrentStep] = useState(1);
   const [deals, setDeals] = useState(dealStorage.getDeals());
@@ -48,9 +51,14 @@ export default function App() {
     };
   }
 
+  function handleUnlock(user) {
+    setOperator(user);
+    setAuthed(true);
+  }
+
   function handleOperatorChange(op) {
     setOperator(op);
-    dealStorage.setActiveOperator(op.id);
+    authService.switchOperator(op.id);
   }
 
   function handleUpdateDeal(patch) {
@@ -86,6 +94,10 @@ export default function App() {
         handleNewDeal();
       }
     }
+  }
+
+  if (!authed) {
+    return <LockScreen onUnlock={handleUnlock} />;
   }
 
   return (
