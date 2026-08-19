@@ -12,10 +12,10 @@ const TAMKO_PACKAGES = [
   },
   {
     key: "titan_xt",
-    name: "TAMKO Titan XT (Best Seller)",
+    name: "TAMKO Titan XT",
     rate: 600,
-    warranty: "160 MPH Wind Warranty + Enhanced Protection",
-    desc: "High-wind extreme durability with AnchorLock technology.",
+    warranty: "160 MPH Wind Warranty + Enhanced AnchorLock Protection",
+    desc: "Best Seller: High-wind extreme durability with AnchorLock technology.",
     popular: true,
   },
   {
@@ -23,7 +23,7 @@ const TAMKO_PACKAGES = [
     name: "Storm Fighter Flex (Class 4)",
     rate: 850,
     warranty: "Class 4 Impact Resistant + Maximum Insurance Discount",
-    desc: "SBS modified asphalt for extreme hail and storm resistance.",
+    desc: "SBS modified asphalt for extreme hail and storm impact resistance.",
   },
 ];
 
@@ -128,16 +128,26 @@ export default function StepQuote({ deal, onUpdateDeal, onNext, onBack }) {
                 className={`package-card ${isSel ? "selected" : ""}`}
                 onClick={() => setSelectedKey(pkg.key)}
               >
-                {pkg.popular && (
-                  <span className="badge badge-gold" style={{ position: "absolute", top: 12, right: 12 }}>
-                    Most Popular ★
-                  </span>
-                )}
-                <div className="package-header">
-                  <div className="package-name">{pkg.name}</div>
-                  <div className="package-price">{formatMoney(pkgTotal)}</div>
+                <div className="package-header" style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 10 }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                      <span className="package-name" style={{ fontSize: 17, fontWeight: 800, color: "var(--navy)" }}>
+                        {pkg.name}
+                      </span>
+                      {pkg.popular && (
+                        <span className="badge badge-gold" style={{ fontSize: 10, padding: "2px 8px" }}>
+                          Most Popular ★
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="package-price" style={{ fontSize: 20, fontWeight: 900, color: "var(--navy)", whiteSpace: "nowrap" }}>
+                    {formatMoney(pkgTotal)}
+                  </div>
                 </div>
-                <div className="package-desc">{pkg.desc}</div>
+                <div className="package-desc" style={{ fontSize: 13, color: "var(--text-muted)", marginTop: 4 }}>
+                  {pkg.desc}
+                </div>
                 <div style={{ fontSize: 12, color: "var(--navy)", fontWeight: 700, marginTop: 6 }}>
                   🛡️ {pkg.warranty}
                 </div>
