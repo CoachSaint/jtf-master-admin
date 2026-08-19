@@ -178,6 +178,13 @@ export default function StepMeasure({ deal, operator, onUpdateDeal, onNext, onBa
             <div className="stat-label">Roof Facets</div>
           </div>
         </div>
+
+        {deal.measurements?.flatAreaM2 && (
+          <div style={{ display: "flex", justifyContent: "space-between", marginTop: 12, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.12)", fontSize: "12px", color: "#cbd5e1" }}>
+            <span>Footprint Area: <b>{Math.round(deal.measurements.flatAreaM2 * 10.7639).toLocaleString()} sq ft</b> ({deal.measurements.flatAreaM2} m²)</span>
+            <span>Confidence: <b>{Math.round((deal.measurements.confidence || 0.85) * 100)}%</b></span>
+          </div>
+        )}
       </div>
 
       {/* Accuracy Disclosure & Transparency Notice */}

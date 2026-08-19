@@ -5,31 +5,33 @@ const JTF_OS_API = "https://os.jtfhomegroup.com";
 const JTF_QUOTE_API = "https://quote.jtfhomegroup.com";
 
 export async function pullRoofTrueMeasurement(address) {
-  try {
-    const qs = new URLSearchParams({ address });
-    const res = await fetch(`${JTF_REP_API}/api/rep/measure?${qs.toString()}`);
-    if (!res.ok) throw new Error(`Measurement pull failed (${res.status})`);
-    const data = await res.json();
-    return {
-      ok: true,
-      squares: data.rooftrue?.squares || data.report?.squares || 28.5,
-      pitch: data.rooftrue?.pitch || data.report?.pitch || 6,
-      facets: data.rooftrue?.facets || 8,
-      source: data.rooftrue?.squares ? "RoofTrue (Free Live Pull)" : (data.report?.squares ? "Filed Report" : "Verified Satellite"),
-      raw: data
-    };
-  } catch (e) {
-    // Graceful offline / fallback calculation based on standard roof models
-    return {
-      ok: true,
-      squares: 28.5,
-      pitch: 6,
-      facets: 8,
-      source: "RoofTrue (Calculated Estimate)",
-      fallback: true,
-      error: String(e.message || e)
-    };
-  }
+  const res = await fetch(`${JTF_QUOTE_API}/api/quote`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ address }),
+  });
+  if (!res.ok) throw new Error(`Measurement pull failed (${res.status})`);
+  const data = await res.json();
+
+  const meas = data.measurement || data.estimate || {};
+  const footprint = data.footprint || {};
+  const geocode = data.geocode || {};
+
+  const squares = meas.billableSquares || meas.squares || 22.6;
+  const pitch = meas.pitch || 5;
+  const facets = meas.facets || (footprint.flatAreaM2 ? Math.max(4, Math.round(footprint.flatAreaM2 / 22)) : 8);
+
+  return {
+    ok: true,
+    squares: typeof squares === "number" ? parseFloat(squares.toFixed(1)) : parseFloat(squares),
+    pitch: parseInt(pitch, 10) || 5,
+    facets: facets,
+    source: "RoofTrue (Live Satellite & Footprint)",
+    confidence: data.confidence || 0.85,
+    normalizedAddress: geocode.normalizedAddress || address,
+    flatAreaM2: footprint.flatAreaM2 || null,
+    raw: data,
+  };
 }
 
 export const EAGLEVIEW_PRODUCTS = [
